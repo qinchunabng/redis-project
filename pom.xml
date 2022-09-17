@@ -16,7 +16,6 @@
         <maven.compiler.source>8</maven.compiler.source>
         <maven.compiler.target>8</maven.compiler.target>
         <springboot.version>2.6.8</springboot.version>
-        <swagger.version>2.9.2</swagger.version>
         <mybatis-plus.version>3.5.2</mybatis-plus.version>
         <jdbc.version>8.0.30</jdbc.version>
         <swagger2.version>2.9.2</swagger2.version>
@@ -83,21 +82,21 @@
             </plugin>
         </plugins>
         <resources>
-        <resource>
-            <directory>${basedir}/src/main/java</directory>
-            <includes>
-                <include>**/*.xml</include>
-                <include>**/*.properties</include>
-            </includes>
-        </resource>
-        <resource>
-            <directory>${basedir}/src/main/resources</directory>
-        </resource>
-        <!-- 主要是这里：打包resources/static静态资源文件放到META-INF/static -->
-        <resource>
-            <directory>src/main/resources/static</directory>
-            <targetPath>META-INF/static</targetPath>
-        </resource>
-    </resources>
+            <resource>
+                <directory>${basedir}/src/main/java</directory>
+                <includes>
+                    <include>**/*.xml</include>
+                    <include>**/*.properties</include>
+                </includes>
+            </resource>
+            <resource>
+                <directory>${basedir}/src/main/resources</directory>
+            </resource>
+            <!-- 主要是这里：打包resources/static静态资源文件放到META-INF/static -->
+            <resource>
+                <directory>src/main/resources/static</directory>
+                <targetPath>META-INF/static</targetPath>
+            </resource>
+        </resources>
     </build>
 </project>

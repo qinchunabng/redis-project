@@ -71,6 +71,22 @@
                 </configuration>
             </plugin>
         </plugins>
+        <resources>
+            <resource>
+                <directory>${basedir}/src/main/java</directory>
+                <includes>
+                    <include>**/*.xml</include>
+                    <include>**/*.properties</include>
+                </includes>
+            </resource>
+            <resource>
+                <directory>${basedir}/src/main/resources</directory>
+            </resource>
+            <!-- 主要是这里：打包resources/static静态资源文件放到META-INF/static -->
+            <resource>
+                <directory>src/main/resources/static</directory>
+                <targetPath>META-INF/static</targetPath>
+            </resource>
+        </resources>
     </build>
-
 </project>
