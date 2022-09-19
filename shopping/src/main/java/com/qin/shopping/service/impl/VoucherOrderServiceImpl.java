@@ -10,8 +10,10 @@ import com.qin.shopping.mapper.VoucherOrderMapper;
 import com.qin.shopping.service.ISeckillVoucherService;
 import com.qin.shopping.service.IVoucherOrderService;
 import com.qin.shopping.utils.RedisIdWorker;
+import org.springframework.aop.framework.AopContext;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 
@@ -50,8 +52,26 @@ public class VoucherOrderServiceImpl extends ServiceImpl<VoucherOrderMapper, Vou
             throw new BusinessException("库存不足");
         }
 
-        //5、扣减库存
-        LambdaUpdateWrapper<SeckillVoucher> lambdaUpdate = Wrappers.lambdaUpdate();
+        //锁加在外部，如果放在方法内部，由于锁先释放，事务后提交的
+        //可能会导致锁释放后，其他线程获取到锁的时候，事务未提交，导致重复下单
+        synchronized (userId.toString().intern()) {
+            //防止事务失效
+            IVoucherOrderService voucherOrderService = (IVoucherOrderService) AopContext.currentProxy();
+            return voucherOrderService.createVoucherOrder(voucherId, userId);
+        }
+    }
+
+    @Transactional
+    public Long createVoucherOrder(Long voucherId, Long userId) {
+        //5.一人一单
+        Long count = query().eq("user_id", userId)
+                .eq("voucher_id", voucherId)
+                .count();
+        if(count != null && count > 0){
+            throw new BusinessException("用户已经购买过一次");
+        }
+
+        //6、扣减库存
         boolean success = seckillVoucherService.update()
                 .setSql("stock = stock - 1")
                 .eq("voucher_id", voucherId)
@@ -60,16 +80,16 @@ public class VoucherOrderServiceImpl extends ServiceImpl<VoucherOrderMapper, Vou
         if(!success){
             throw new BusinessException("库存不足");
         }
-        //6、创建订单
+        //7、创建订单
         VoucherOrder voucherOrder = new VoucherOrder();
-        //6.1订单id
+        //7.1订单id
         voucherOrder.setId(redisIdWorker.nextId("order"));
-        //6.2用户id
+        //7.2用户id
         voucherOrder.setUserId(userId);
-        //6.3代金券id
+        //7.3代金券id
         voucherOrder.setVoucherId(voucherId);
         save(voucherOrder);
-        //7、返回订单ID
+        //8、返回订单ID
         return voucherOrder.getId();
     }
 }

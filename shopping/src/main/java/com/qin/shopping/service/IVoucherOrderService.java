@@ -12,4 +12,6 @@ import com.qin.shopping.entity.VoucherOrder;
 public interface IVoucherOrderService extends IService<VoucherOrder> {
 
     Long seckillVoucher(Long voucherId, Long userId);
+
+    Long createVoucherOrder(Long voucherId, Long userId);
 }
