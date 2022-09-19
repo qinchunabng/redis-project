@@ -7,7 +7,7 @@ import com.qin.shopping.mapper.VoucherMapper;
 import com.qin.shopping.service.ISeckillVoucherService;
 import com.qin.shopping.service.IVoucherService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 /**
@@ -16,7 +16,7 @@ import org.springframework.transaction.annotation.Transactional;
  * @author qcb
  * @date 2022/09/17 19:50.
  */
-@Component
+@Service
 public class VoucherServiceImpl extends ServiceImpl<VoucherMapper, Voucher> implements IVoucherService {
 
     @Autowired
