@@ -9,9 +9,12 @@ import com.qin.shopping.exception.BusinessException;
 import com.qin.shopping.mapper.VoucherOrderMapper;
 import com.qin.shopping.service.ISeckillVoucherService;
 import com.qin.shopping.service.IVoucherOrderService;
+import com.qin.shopping.utils.ILock;
 import com.qin.shopping.utils.RedisIdWorker;
+import com.qin.shopping.utils.SimpleRedisLock;
 import org.springframework.aop.framework.AopContext;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -31,6 +34,9 @@ public class VoucherOrderServiceImpl extends ServiceImpl<VoucherOrderMapper, Vou
 
     @Autowired
     private RedisIdWorker redisIdWorker;
+
+    @Autowired
+    private RedisTemplate redisTemplate;
 
     @Override
     public Long seckillVoucher(Long voucherId, Long userId) {
@@ -52,13 +58,26 @@ public class VoucherOrderServiceImpl extends ServiceImpl<VoucherOrderMapper, Vou
             throw new BusinessException("库存不足");
         }
 
-        //锁加在外部，如果放在方法内部，由于锁先释放，事务后提交的
-        //可能会导致锁释放后，其他线程获取到锁的时候，事务未提交，导致重复下单
-        synchronized (userId.toString().intern()) {
-            //防止事务失效
+        //更换为分布式锁
+        ILock lock = new SimpleRedisLock("order:" + userId, redisTemplate);
+        //获取锁
+        boolean isLock = lock.tryLock(5);
+        if(!isLock){
+            throw new BusinessException("不允许重复下单");
+        }
+        try {
             IVoucherOrderService voucherOrderService = (IVoucherOrderService) AopContext.currentProxy();
             return voucherOrderService.createVoucherOrder(voucherId, userId);
+        }finally {
+            lock.unlock();
         }
+        //锁加在外部，如果放在方法内部，由于锁先释放，事务后提交的
+        //可能会导致锁释放后，其他线程获取到锁的时候，事务未提交，导致重复下单
+//        synchronized (userId.toString().intern()) {
+//            //防止事务失效
+//            IVoucherOrderService voucherOrderService = (IVoucherOrderService) AopContext.currentProxy();
+//            return voucherOrderService.createVoucherOrder(voucherId, userId);
+//        }
     }
 
     @Transactional
