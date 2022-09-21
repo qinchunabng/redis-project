@@ -33,7 +33,7 @@ public class ShopServiceImpl extends ServiceImpl<ShopMapper, Shop> implements IS
     @Override
     public Shop queryById(Long id){
         Shop shop = cacheClient.queryWithMutex(RedisConstant.CACHE_SHOP_KEY, id,
-                Shop.class, this::getById, RedisConstant.CACHE_SHOP_TTL, TimeUnit.SECONDS);
+                Shop.class, this::getById, RedisConstant.CACHE_SHOP_TTL, TimeUnit.MINUTES);
 
         if(shop == null){
             throw new BusinessException("店铺不存在");

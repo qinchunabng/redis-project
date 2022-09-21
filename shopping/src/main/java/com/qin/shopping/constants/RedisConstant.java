@@ -20,7 +20,7 @@ public interface RedisConstant {
     /**
      * 商品缓存过期时间
      */
-    long CACHE_SHOP_TTL = 3L;
+    long CACHE_SHOP_TTL = 30L;
 
     /**
      * NULL缓存过期时间
