@@ -3,6 +3,7 @@ package com.qin.shopping.utils;
 import cn.hutool.core.util.StrUtil;
 import cn.hutool.json.JSONObject;
 import cn.hutool.json.JSONUtil;
+import com.qin.shopping.constants.RedisConstant;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Component;
@@ -22,8 +23,6 @@ import java.util.function.Function;
 @Slf4j
 @Component
 public class CacheClient {
-
-    private static final long CACHE_NULL_TTL = 1L;
 
     private final RedisTemplate redisTemplate;
 
@@ -62,7 +61,7 @@ public class CacheClient {
         //1.查询缓存
         String json = (String) redisTemplate.opsForValue().get(key);
         //2.判断缓存是否存在
-        if(StrUtil.isNotEmpty(json)){
+        if(StrUtil.isNotBlank(json)){
             return JSONUtil.toBean(json, type);
         }
         //判断命中的值是否是空值
@@ -77,7 +76,7 @@ public class CacheClient {
         //5.不存在，返回错误
         if(r == null){
             //将空值写入redis
-            redisTemplate.opsForValue().set(key, "", CACHE_NULL_TTL, TimeUnit.MINUTES);
+            redisTemplate.opsForValue().set(key, "", RedisConstant.CACHE_NULL_TTL, TimeUnit.MINUTES);
             return null;
         }
         //6.存在，写入redis
@@ -102,7 +101,7 @@ public class CacheClient {
         //1.查询缓存
         String json = (String) redisTemplate.opsForValue().get(key);
         //2.判断缓存是否存在
-        if(StrUtil.isEmpty(json)){
+        if(StrUtil.isBlank(json)){
             return null;
         }
         //3.命中把json反序列化为对象
@@ -136,6 +135,59 @@ public class CacheClient {
             });
         }
         //返回查询信息
+        return r;
+    }
+
+    public <R,ID> R queryWithMutex(String keyPrefix, ID id, Class<R> type, Function<ID, R> dbCallback, Long time, TimeUnit unit){
+        String key = keyPrefix + id;
+        //1.查询缓存
+        String json = (String) redisTemplate.opsForValue().get(key);
+        //2.判断缓存是否存在
+        if(StrUtil.isNotBlank(json)){
+            //3.存在直接返回
+            return JSONUtil.toBean(json, type);
+        }
+        //判断命中的是否是空值
+        if(json != null){
+            return null;
+        }
+
+        //4.实现重建缓存
+        //4.1.获取互斥锁
+        ILock lock = new SimpleRedisLock(RedisConstant.SHOP_LOCK_KEY, redisTemplate);
+        boolean isLock = lock.tryLock(10);
+        //4.2判断锁是否获取成功
+        if(!isLock){
+            try {
+                //4.3.所获取失败，休眠并重试
+                Thread.sleep(50);
+                return queryWithMutex(keyPrefix, id, type, dbCallback, time, unit);
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e);
+            }
+        }
+        R r = null;
+        try {
+            //4.4.获取锁成功，根据id查询数据库
+            if(dbCallback != null){
+                r = dbCallback.apply(id);
+            }
+            //5.不存在，返回错误
+            if(r == null) {
+                //将空值写入redis
+                redisTemplate.opsForValue().set(key, "", RedisConstant.CACHE_NULL_TTL, TimeUnit.MINUTES);
+                //返回null
+                return null;
+            }
+            //6.存在，写入redis
+            redisTemplate.opsForValue().set(key, JSONUtil.toJsonStr(r), time, unit);
+        }catch (Exception e){
+            throw new RuntimeException(e);
+        }finally {
+            //7.释放锁
+            lock.unlock();
+        }
+        //8.返回
         return r;
     }
 }
