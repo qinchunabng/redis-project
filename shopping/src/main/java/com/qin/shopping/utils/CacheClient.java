@@ -117,7 +117,7 @@ public class CacheClient {
         //5重建缓存
         //5.1获取互斥锁
         ILock lock = new SimpleRedisLock(id.toString(), redisTemplate);
-        boolean isSuccess = lock.tryLock(5);
+        boolean isSuccess = lock.tryLock(30);
         //5.2判断锁是否获取成功
         if(isSuccess){
             //5.3获取锁成功，开启独立线程，实现缓存重建
@@ -155,7 +155,7 @@ public class CacheClient {
         //4.实现重建缓存
         //4.1.获取互斥锁
         ILock lock = new SimpleRedisLock(RedisConstant.SHOP_LOCK_KEY, redisTemplate);
-        boolean isLock = lock.tryLock(10);
+        boolean isLock = lock.tryLock(30);
         //4.2判断锁是否获取成功
         if(!isLock){
             try {
