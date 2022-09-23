@@ -26,4 +26,9 @@ public interface RedisConstant {
      * NULL缓存过期时间
      */
     long CACHE_NULL_TTL = 1L;
+
+    /**
+     * 秒杀库存key
+     */
+    String SECKILL_STOCK_KEY = "seckill:stock:";
 }

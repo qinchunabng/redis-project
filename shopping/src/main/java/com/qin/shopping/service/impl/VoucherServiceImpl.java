@@ -1,12 +1,14 @@
 package com.qin.shopping.service.impl;
 
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.qin.shopping.constants.RedisConstant;
 import com.qin.shopping.entity.SeckillVoucher;
 import com.qin.shopping.entity.Voucher;
 import com.qin.shopping.mapper.VoucherMapper;
 import com.qin.shopping.service.ISeckillVoucherService;
 import com.qin.shopping.service.IVoucherService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -21,6 +23,9 @@ public class VoucherServiceImpl extends ServiceImpl<VoucherMapper, Voucher> impl
 
     @Autowired
     private ISeckillVoucherService seckillVoucherService;
+
+    @Autowired
+    private RedisTemplate redisTemplate;
 
     /**
      * 添加秒杀优惠券
@@ -38,5 +43,7 @@ public class VoucherServiceImpl extends ServiceImpl<VoucherMapper, Voucher> impl
         seckillVoucher.setBeginTime(voucher.getBeginTime());
         seckillVoucher.setEndTime(voucher.getEndTime());
         seckillVoucherService.save(seckillVoucher);
+        //保存秒杀库存到redis中
+        redisTemplate.opsForValue().set(RedisConstant.SECKILL_STOCK_KEY + voucher.getId(), voucher.getStock());
     }
 }
