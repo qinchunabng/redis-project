@@ -1,7 +1,7 @@
 package com.qin.shopping.service.impl;
 
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import com.qin.shopping.constants.RedisConstant;
+import com.qin.shopping.constants.RedisConstants;
 import com.qin.shopping.entity.Shop;
 import com.qin.shopping.exception.BusinessException;
 import com.qin.shopping.mapper.ShopMapper;
@@ -32,8 +32,8 @@ public class ShopServiceImpl extends ServiceImpl<ShopMapper, Shop> implements IS
 
     @Override
     public Shop queryById(Long id){
-        Shop shop = cacheClient.queryWithMutex(RedisConstant.CACHE_SHOP_KEY, id,
-                Shop.class, this::getById, RedisConstant.CACHE_SHOP_TTL, TimeUnit.MINUTES);
+        Shop shop = cacheClient.queryWithMutex(RedisConstants.CACHE_SHOP_KEY, id,
+                Shop.class, this::getById, RedisConstants.CACHE_SHOP_TTL, TimeUnit.MINUTES);
 
         if(shop == null){
             throw new BusinessException("店铺不存在");
@@ -52,7 +52,7 @@ public class ShopServiceImpl extends ServiceImpl<ShopMapper, Shop> implements IS
         //更新数据库
         boolean success = updateById(shop);
         if(success){
-            redisTemplate.delete(RedisConstant.CACHE_SHOP_KEY + id);
+            redisTemplate.delete(RedisConstants.CACHE_SHOP_KEY + id);
         }
         return success;
     }

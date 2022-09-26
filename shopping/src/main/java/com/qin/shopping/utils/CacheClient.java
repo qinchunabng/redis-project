@@ -3,7 +3,7 @@ package com.qin.shopping.utils;
 import cn.hutool.core.util.StrUtil;
 import cn.hutool.json.JSONObject;
 import cn.hutool.json.JSONUtil;
-import com.qin.shopping.constants.RedisConstant;
+import com.qin.shopping.constants.RedisConstants;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Component;
@@ -76,7 +76,7 @@ public class CacheClient {
         //5.不存在，返回错误
         if(r == null){
             //将空值写入redis
-            redisTemplate.opsForValue().set(key, "", RedisConstant.CACHE_NULL_TTL, TimeUnit.MINUTES);
+            redisTemplate.opsForValue().set(key, "", RedisConstants.CACHE_NULL_TTL, TimeUnit.MINUTES);
             return null;
         }
         //6.存在，写入redis
@@ -154,7 +154,7 @@ public class CacheClient {
 
         //4.实现重建缓存
         //4.1.获取互斥锁
-        ILock lock = new SimpleRedisLock(RedisConstant.SHOP_LOCK_KEY, redisTemplate);
+        ILock lock = new SimpleRedisLock(RedisConstants.SHOP_LOCK_KEY, redisTemplate);
         boolean isLock = lock.tryLock(30);
         //4.2判断锁是否获取成功
         if(!isLock){
@@ -175,7 +175,7 @@ public class CacheClient {
             //5.不存在，返回错误
             if(r == null) {
                 //将空值写入redis
-                redisTemplate.opsForValue().set(key, "", RedisConstant.CACHE_NULL_TTL, TimeUnit.MINUTES);
+                redisTemplate.opsForValue().set(key, "", RedisConstants.CACHE_NULL_TTL, TimeUnit.MINUTES);
                 //返回null
                 return null;
             }

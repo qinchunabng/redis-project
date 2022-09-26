@@ -1,7 +1,7 @@
 package com.qin.shopping.service.impl;
 
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import com.qin.shopping.constants.RedisConstant;
+import com.qin.shopping.constants.RedisConstants;
 import com.qin.shopping.entity.SeckillVoucher;
 import com.qin.shopping.entity.Voucher;
 import com.qin.shopping.mapper.VoucherMapper;
@@ -44,6 +44,6 @@ public class VoucherServiceImpl extends ServiceImpl<VoucherMapper, Voucher> impl
         seckillVoucher.setEndTime(voucher.getEndTime());
         seckillVoucherService.save(seckillVoucher);
         //保存秒杀库存到redis中
-        redisTemplate.opsForValue().set(RedisConstant.SECKILL_STOCK_KEY + voucher.getId(), voucher.getStock());
+        redisTemplate.opsForValue().set(RedisConstants.SECKILL_STOCK_KEY + voucher.getId(), voucher.getStock());
     }
 }
