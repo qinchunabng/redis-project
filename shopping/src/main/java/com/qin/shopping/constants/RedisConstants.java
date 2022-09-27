@@ -31,4 +31,9 @@ public interface RedisConstants {
      * 秒杀库存key
      */
     String SECKILL_STOCK_KEY = "seckill:stock:";
+
+    /**
+     * 博客喜欢key
+     */
+    String BLOG_LIKED_KEY = "blog:liked:";
 }
