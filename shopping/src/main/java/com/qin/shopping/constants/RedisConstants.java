@@ -36,4 +36,9 @@ public interface RedisConstants {
      * 博客喜欢key
      */
     String BLOG_LIKED_KEY = "blog:liked:";
+
+    /**
+     * 关注用户的key
+     */
+    String FOLLOW_USER_KEY = "follow:user:";
 }
