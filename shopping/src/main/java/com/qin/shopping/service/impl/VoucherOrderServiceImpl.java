@@ -6,10 +6,7 @@ import com.qin.shopping.exception.BusinessException;
 import com.qin.shopping.mapper.VoucherOrderMapper;
 import com.qin.shopping.service.ISeckillVoucherService;
 import com.qin.shopping.service.IVoucherOrderService;
-import com.qin.shopping.utils.ILock;
-import com.qin.shopping.utils.RedisIdWorker;
-import com.qin.shopping.utils.SimpleRedisLock;
-import com.qin.shopping.utils.SpringContextUtils;
+import com.qin.shopping.utils.*;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.aop.framework.AopContext;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -160,7 +157,7 @@ public class VoucherOrderServiceImpl extends ServiceImpl<VoucherOrderMapper, Vou
 
     private void handleVoucherOrder(VoucherOrder voucherOrder){
         //更换为分布式锁
-        ILock lock = new SimpleRedisLock("order:" + voucherOrder.getUserId(), redisTemplate);
+        ILock lock = new ReentrantRedisLock("order:" + voucherOrder.getUserId(), redisTemplate);
         //获取锁
         boolean isLock = lock.tryLock(5);
         if(!isLock){

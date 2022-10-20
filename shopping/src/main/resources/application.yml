@@ -2,8 +2,14 @@ spring:
   application:
     name: seckill
   redis:
-    host: 192.168.3.126
-    port: 6379
+    cluster:
+      nodes:
+        - redis1.cache.svr:7379
+        - redis1.cache.svr:8379
+        - redis2.cache.svr:7379
+        - redis2.cache.svr:8379
+        - redis3.cache.svr:7379
+        - redis3.cache.svr:8379
     lettuce:
       pool:
         max-active: 10
