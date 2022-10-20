@@ -25,8 +25,7 @@ public class BlogController {
 
     @PostMapping
     public Result saveBlog(@RequestBody Blog blog){
-        boolean success = blogService.save(blog);
-        return success ? Result.ok(blog.getId()) : Result.fail("保存失败");
+        return Result.ok(blogService.saveBlog(blog));
     }
 
     @GetMapping("/hot")

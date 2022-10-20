@@ -41,4 +41,9 @@ public interface RedisConstants {
      * 关注用户的key
      */
     String FOLLOW_USER_KEY = "follow:user:";
+
+    /**
+     * Feed key
+     */
+    String FEED_KEY = "feed:";
 }

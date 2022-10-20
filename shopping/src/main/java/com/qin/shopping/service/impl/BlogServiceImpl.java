@@ -8,13 +8,19 @@ import com.qin.shopping.constants.RedisConstants;
 import com.qin.shopping.constants.SystemConstants;
 import com.qin.shopping.dto.UserDTO;
 import com.qin.shopping.entity.Blog;
+import com.qin.shopping.entity.Follow;
 import com.qin.shopping.entity.User;
+import com.qin.shopping.exception.BusinessException;
 import com.qin.shopping.mapper.BlogMapper;
 import com.qin.shopping.service.IBlogService;
+import com.qin.shopping.service.IFollowService;
 import com.qin.shopping.service.IUserService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.core.DefaultTypedTuple;
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.core.ZSetOperations;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -36,6 +42,9 @@ public class BlogServiceImpl extends ServiceImpl<BlogMapper, Blog> implements IB
 
     @Autowired
     private RedisTemplate redisTemplate;
+
+    @Autowired
+    private IFollowService followService;
 
     @Override
     public Page<Blog> queryHotBlog(Integer current) {
@@ -101,6 +110,32 @@ public class BlogServiceImpl extends ServiceImpl<BlogMapper, Blog> implements IB
         return users.stream()
                 .map(user -> new UserDTO(user.getId(), user.getNickName(), user.getIcon()))
                 .collect(Collectors.toList());
+    }
+
+    @Transactional
+    @Override
+    public Long saveBlog(Blog blog) {
+        //1.保存博客
+        boolean success = save(blog);
+        if(!success){
+            //1.1失败直接返回
+            throw new BusinessException("保存博客失败");
+        }
+        //2.查询所有的当前用的所有的分析
+        List<Follow> followList = followService.lambdaQuery()
+                .eq(Follow::getFollowUserId, blog.getUserId())
+                .list();
+        //3.推送博客给所有的粉丝
+        if(followList == null || followList.isEmpty()){
+            return blog.getId();
+        }
+        for(Follow follow : followList){
+            //3.1获取粉丝的ID
+            Long userId = follow.getUserId();
+            //3.2推送
+            redisTemplate.opsForZSet().add(RedisConstants.FEED_KEY + userId, blog.getId(), System.currentTimeMillis());
+        }
+        return blog.getId();
     }
 
     private void queryBlogUser(Blog blog){
